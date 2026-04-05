@@ -21,7 +21,7 @@ This guide covers both. Skip to [Portable version](#portable-version) if that's 
 
 ## Installer version
 
-1. Download `AIClocker-Setup-1.2.0.exe` from the releases page (or build it locally — see [README.md](README.md)).
+1. Download `AIClocker-Setup-1.2.0.exe` from the [releases page](https://github.com/MorlachAU/aiclocker/releases) (or build it locally — see [../README.md](../README.md)).
 2. Double-click the `.exe`.
 3. **SmartScreen warning:** Windows may show "Windows protected your PC" because the installer is signed with a self-signed certificate. This is expected. To proceed:
    - Click **More info**

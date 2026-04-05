@@ -1,7 +1,7 @@
 # AIClocker
 
 <p align="center">
-  <img src="../dashboard/assets/mousewheel_logo.png" alt="MouseWheel Digital" width="140">
+  <img src="dashboard/assets/mousewheel_logo.png" alt="MouseWheel Digital" width="140">
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@ Parses the JSONL conversation logs that Claude Code and Co-Work write locally, s
 - **Claude Chat in a browser** (claude.ai) — The chat data lives inside your browser's sandboxed IndexedDB and isn't exposed to outside apps. Even if we could read it, the data itself doesn't contain token counts — Anthropic doesn't send per-message usage numbers to the browser. A browser extension could count *messages* but not tokens or cost.
 - **Claude Chat in the Desktop app** — The desktop app is an Electron wrapper around claude.ai. Same story: conversations live server-side, the local cache (`%APPDATA%/Claude/`) only stores UI state and cached account metadata, not usage metrics. Verified by poking at its IndexedDB.
 - **Claude Pro / Max plan usage totals** — There's no public API for subscribers to query their own usage. The only official usage API Anthropic offers is on `console.anthropic.com` for **developer API keys**, not for Pro/Max chat accounts.
-- **GitHub Copilot, Cursor, Windsurf, Aider, Continue.dev, Cody, ChatGPT Desktop** — Investigated. None store trackable local usage data with token counts on the machine I tested. If any of these ever expose local JSONL-style logs, the plugin architecture (see [PROVIDERS.md](PROVIDERS.md)) lets you add a new provider in a single file.
+- **GitHub Copilot, Cursor, Windsurf, Aider, Continue.dev, Cody, ChatGPT Desktop** — Investigated. None store trackable local usage data with token counts on the machine I tested. If any of these ever expose local JSONL-style logs, the plugin architecture (see [docs/PROVIDERS.md](docs/PROVIDERS.md)) lets you add a new provider in a single file.
 - **Microsoft Copilot** — Stores data in encrypted Helium DB format. Not parseable.
 - **Passive app-open time** — AIClocker measures *active* engagement based on message timestamp gaps. If you open Claude Code and walk away, that idle time is deliberately excluded.
 
@@ -66,33 +66,42 @@ On a Claude Max plan ($200/month), real cost is flat. The API-equivalent number 
 
 ## Install
 
-### Option A — run from source (dev)
-```
-cd E:\Dev\aiclocker
-npm install
-npm start
-```
+### Option A — Download the installer (recommended)
 
-### Option B — build and install (recommended)
-```
-cd E:\Dev\aiclocker
-node scripts/make-cert.js                # one-time: generate self-signed cert
-node scripts/make-icon.js                # one-time: generate clock icon
-set CSC_LINK=certs\aiclocker.pfx
-set CSC_KEY_PASSWORD=<contents of certs\password.txt>
-npm run build
-```
-
-Each build produces **two** signed artifacts in the output directory:
+Grab the latest build from [**Releases**](https://github.com/MorlachAU/aiclocker/releases):
 
 | File | Type | Use when |
 |---|---|---|
-| `AIClocker-Setup-1.1.0.exe` | NSIS installer | You want a proper install with Start Menu shortcut, auto-updates, uninstaller |
-| `AIClocker-Portable-1.1.0.exe` | Portable exe | You want a single exe with zero footprint — stores data in a folder next to itself, no registry writes, no `%APPDATA%` leftovers |
+| `AIClocker-Setup-1.2.0.exe` | NSIS installer | You want a proper install with Start Menu shortcut, desktop shortcut, auto-updates, and a real uninstaller. User picks the install path during setup. |
+| `AIClocker-Portable-1.2.0.exe` | Portable exe | You want a single exe with zero footprint — stores its database in a folder next to itself, never writes to the registry or `%APPDATA%`. Drop it on a USB stick and go. |
 
-Double-click either to run. Because the cert is self-signed, Windows SmartScreen will show "Unknown publisher" on first run — click "More info → Run anyway", or import `certs/aiclocker.cer` into Trusted Root Certification Authorities to eliminate the warning.
+Double-click either to run.
 
-See [INSTALL.md](INSTALL.md) for more detail on both flavors.
+> **SmartScreen warning:** The installer is signed with a self-signed certificate, so Windows will show *"Windows protected your PC — Unknown publisher"* on first run. Click **More info → Run anyway** to proceed. This is a one-time warning — the installer is safe, Windows just doesn't recognize the (non-commercial) signing cert.
+
+See [docs/INSTALL.md](docs/INSTALL.md) for the full install walkthrough, including how to permanently trust the signing cert, where the data lives, and how to use the portable version.
+
+### Option B — Build from source
+
+For contributors or users who want to inspect/modify the code:
+
+```bash
+git clone https://github.com/MorlachAU/aiclocker.git
+cd aiclocker
+npm install
+
+# Option B.1: run from source (dev mode, uses local data/ folder)
+npm start
+
+# Option B.2: build a signed installer yourself
+node scripts/make-cert.js          # one-time: generate self-signed cert
+node scripts/make-icon.js          # one-time: generate clock icon
+set CSC_LINK=certs\aiclocker.pfx
+set CSC_KEY_PASSWORD=<contents of certs\password.txt>
+npm run build                      # produces release/AIClocker-Setup-*.exe and release/AIClocker-Portable-*.exe
+```
+
+The output lands in `release/`. Both artifacts are signed during build.
 
 ---
 
@@ -101,28 +110,41 @@ See [INSTALL.md](INSTALL.md) for more detail on both flavors.
 A purple clock icon appears in the system tray. Right-click to see:
 
 - Current session title and model
-- Active/Idle status
+- Active / Idle status
 - Today's API-equivalent cost, tokens, and active time
 - This week's cost, tokens, and active time
 - Breakdown by model (Opus / Sonnet / Haiku)
 - Breakdown by tool/provider (when more than one has activity)
 - **Open Dashboard** — launches the full charts view
-- **Start with Windows** — checkbox toggle (persists across restarts)
+- **About AIClocker...** — opens the About dialog with brand links and feedback email
+- **Start with Windows** — checkbox toggle that persists across restarts (hidden in portable builds)
 - **Quit**
 
 ---
 
 ## Dashboard
 
-Opens in a BrowserWindow when you click "Open Dashboard":
+Opens in a BrowserWindow when you click "Open Dashboard". It has a standard Windows menu bar across the top (**File / View / Help**) plus:
 
 - **Summary cards** — cost, tokens, active time, session count, message count
+- **Date range picker** — Today / Week / Month / All Time
 - **Daily API-equivalent bar chart**
 - **Model usage doughnut** — Opus vs Sonnet vs Haiku
 - **Token type stacked bar** — input / output / cache write / cache read per day
 - **Top tools** — horizontal bar chart of most-used tools (Bash, Edit, Read, etc.)
 - **Session table** — title, date, duration, messages, tokens, cost
-- **Date range picker** — Today / Week / Month / All Time
+
+### Menu bar
+
+| Menu | Items |
+|---|---|
+| **File** | Close Window (Ctrl+W), Quit AIClocker (Ctrl+Q) |
+| **View** | Reload, Fullscreen, Toggle DevTools |
+| **Help** | View on GitHub, Report an Issue, MouseWheel Digital, Buy Me a Coffee, About AIClocker |
+
+### About dialog
+
+Accessible from both the tray menu and **Help → About AIClocker**. Shows the MouseWheel Digital logo, version, three buttons (website, ☕ Buy Me a Coffee, GitHub), and a feedback email with a one-click Copy button. Close with the Close button or Escape key.
 
 ---
 
@@ -147,7 +169,7 @@ On first launch of the installed app, AIClocker migrates any existing database f
 
 ## Adding a new AI tool
 
-See [PROVIDERS.md](PROVIDERS.md). Short version:
+See [docs/PROVIDERS.md](docs/PROVIDERS.md). Short version:
 
 1. Copy `src/providers/_template.js` to `src/providers/your-tool.js`
 2. Fill in the methods (`discoverFiles`, `normalizeRecord`, `discoverSessions`, `getWatchPaths`)
@@ -161,7 +183,7 @@ That's it — no changes to ingest, stats, tray, dashboard, or database schema n
 ## Project structure
 
 ```
-E:\Dev\aiclocker\
+aiclocker/
 ├── main.js                 # Electron entry point — window lifecycle, menu, IPC handlers
 ├── LICENSE                 # MIT
 ├── icon.png, icon.ico      # App icons (multi-resolution)
@@ -227,6 +249,15 @@ The hook lives at `.git/hooks/post-commit` in the parent repo. Since hooks are n
 
 ---
 
+## Further reading
+
+- [**docs/INSTALL.md**](docs/INSTALL.md) — Full install walkthrough for both installer and portable builds, plus how to use the app day-to-day
+- [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md) — Technical deep-dive: data flow, SQLite schema, IPC bridges, Help menu, sync automation
+- [**docs/PROVIDERS.md**](docs/PROVIDERS.md) — How to add support for a new AI tool in a single provider file
+- [**docs/CHANGELOG.md**](docs/CHANGELOG.md) — Version history
+
+---
+
 ## Known limitations
 
 1. **No Claude Chat tracking** — Anthropic doesn't expose chat token data to subscribers
@@ -252,7 +283,7 @@ Feedback is also very welcome at **feedback@mousewheeldigital.com**.
 ---
 
 <p align="center">
-  <img src="../dashboard/assets/mousewheel_logo.png" alt="MouseWheel Digital" width="80">
+  <img src="dashboard/assets/mousewheel_logo.png" alt="MouseWheel Digital" width="80">
 </p>
 
 <p align="center">
