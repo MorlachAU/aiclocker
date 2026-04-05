@@ -92,10 +92,26 @@ h3 {
   border: 1px solid #30363d;
   border-radius: 10px;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 280px;
 }
 
-.chart-container.chart-small {
-  max-height: 280px;
+/* Chart.js requires a positioned parent with a fixed/flex size so it can
+   fill the space without growing unbounded. The canvas itself must not
+   receive explicit dimensions — Chart.js manages them. */
+.chart-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.chart-body canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Sessions table */
