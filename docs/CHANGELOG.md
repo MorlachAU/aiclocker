@@ -9,6 +9,18 @@ Versioning follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH
 
 ---
 
+## [1.2.1] — 2026-04-06
+
+Small infrastructure release — no user-facing feature changes.
+
+### Changed
+- **Build artifacts no longer have version suffixes in their filenames.** `AIClocker-Setup-1.2.0.exe` → `AIClocker-Setup.exe` and `AIClocker-Portable-1.2.0.exe` → `AIClocker-Portable.exe`. This lets the mousewheeldigital.com website link to GitHub's `/releases/latest/download/AIClocker-Setup.exe` URL which auto-redirects to whatever the newest release is — so the site never needs a manual URL edit after a new version ships.
+- `latest.yml` (auto-updater metadata) now references the version-less filenames. Existing v1.2.0 auto-updater clients pick up the new `latest.yml` on their next scheduled check and download the version-less installer without issue.
+- Updated `package.json` `build.nsis.artifactName` and `build.portable.artifactName`.
+- Updated the AIClocker landing page at mousewheeldigital.com/aiclocker to use the stable `/releases/latest/download/` URL pattern.
+
+---
+
 ## [1.2.0] — 2026-04-06
 
 First public release milestone. Adds MouseWheel Digital branding, a proper Help menu with About dialog, the LICENSE file, and end-to-end automation for the public GitHub mirror.

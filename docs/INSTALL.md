@@ -4,8 +4,8 @@ AIClocker ships in two flavors:
 
 | Flavor | File | Best for |
 |---|---|---|
-| **Installer** | `AIClocker-Setup-1.2.0.exe` | Normal use — installs to Program Files or user dir, adds Start Menu + desktop shortcuts, proper uninstaller, auto-updates |
-| **Portable** | `AIClocker-Portable-1.2.0.exe` | USB stick, restricted machines, "no traces" use — single exe, stores all data in a folder next to itself, zero registry writes |
+| **Installer** | `AIClocker-Setup.exe` | Normal use — installs to Program Files or user dir, adds Start Menu + desktop shortcuts, proper uninstaller, auto-updates |
+| **Portable** | `AIClocker-Portable.exe` | USB stick, restricted machines, "no traces" use — single exe, stores all data in a folder next to itself, zero registry writes |
 
 This guide covers both. Skip to [Portable version](#portable-version) if that's what you want.
 
@@ -21,7 +21,7 @@ This guide covers both. Skip to [Portable version](#portable-version) if that's 
 
 ## Installer version
 
-1. Download `AIClocker-Setup-1.2.0.exe` from the [releases page](https://github.com/MorlachAU/aiclocker/releases) (or build it locally — see [../README.md](../README.md)).
+1. Download `AIClocker-Setup.exe` from the [releases page](https://github.com/MorlachAU/aiclocker/releases) (or build it locally — see [../README.md](../README.md)).
 2. Double-click the `.exe`.
 3. **SmartScreen warning:** Windows may show "Windows protected your PC" because the installer is signed with a self-signed certificate. This is expected. To proceed:
    - Click **More info**
@@ -122,7 +122,7 @@ To check manually, just quit and relaunch.
 No installation needed. Just run the exe.
 
 ### How it works
-- Download `AIClocker-Portable-1.2.0.exe`
+- Download `AIClocker-Portable.exe`
 - Put it anywhere — USB stick, `Documents`, a project folder, wherever
 - Double-click to run
 - First launch creates an `AIClocker-data/` folder **next to the exe** containing:
