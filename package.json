@@ -28,7 +28,7 @@
     "appId": "com.benkirtland.aiclocker",
     "productName": "AIClocker",
     "directories": {
-      "output": "release2"
+      "output": "release"
     },
     "files": [
       "main.js",

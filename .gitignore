@@ -6,5 +6,3 @@ certs/
 dist/
 build-output/
 release/
-release2/
-portable-test/
