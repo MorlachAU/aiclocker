@@ -1,10 +1,21 @@
 # AIClocker
 
+<p align="center">
+  <img src="../dashboard/assets/mousewheel_logo.png" alt="MouseWheel Digital" width="140">
+</p>
+
+<p align="center">
+  <a href="https://www.mousewheeldigital.com/"><img src="https://img.shields.io/badge/MouseWheel_Digital-Product-00c8a0?style=flat-square" alt="MouseWheel Digital"></a>
+  <a href="https://buymeacoffee.com/mousewheeldigital"><img src="https://img.shields.io/badge/Buy_Me_A_Coffee-Support-FFDD00?style=flat-square&logo=buymeacoffee&logoColor=black" alt="Buy Me A Coffee"></a>
+  <a href="https://github.com/MorlachAU/aiclocker/releases"><img src="https://img.shields.io/github/v/release/MorlachAU/aiclocker?style=flat-square&color=6e40c9" alt="Latest Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License"></a>
+</p>
+
 A Windows system tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Ships with built-in support for **Claude Code** and **Claude Co-Work**, and has a plugin architecture for adding more tools.
 
 **Current version:** 1.1.1
 **Platform:** Windows 11 (Electron 35)
-**Author:** Ben Kirtland
+**Author:** Ben Kirtland — *A MouseWheel Digital product*
 
 ---
 
@@ -200,3 +211,35 @@ The hook lives at `.git/hooks/post-commit` in the parent repo. Since hooks are n
 3. **Pricing must be updated manually** — edit `src/pricing.js` when rates change
 4. **Self-signed cert triggers SmartScreen** — expected for any non-commercial cert
 5. **First cold launch is ~10-15s** — 500+ MB of JSONL to parse. Subsequent launches are sub-second via byte-offset incremental ingest.
+
+---
+
+## Support the project
+
+AIClocker is free and open source. If it saves you time and you want to buy the author a coffee:
+
+<p align="center">
+  <a href="https://buymeacoffee.com/mousewheeldigital">
+    <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-Support-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me A Coffee">
+  </a>
+</p>
+
+Feedback is also very welcome at **feedback@mousewheeldigital.com**.
+
+---
+
+<p align="center">
+  <img src="../dashboard/assets/mousewheel_logo.png" alt="MouseWheel Digital" width="80">
+</p>
+
+<p align="center">
+  <strong>A <a href="https://www.mousewheeldigital.com/">MouseWheel Digital</a> product</strong>
+</p>
+
+<p align="center">
+  <em>Digital products. Built with purpose.</em>
+</p>
+
+<p align="center">
+  Copyright © 2026 Ben Kirtland — Built with the assistance of <a href="https://claude.com/claude-code">Claude Code</a> by Anthropic.
+</p>

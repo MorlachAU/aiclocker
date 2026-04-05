@@ -9,4 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getTopTools: (range, limit) => ipcRenderer.invoke('get-top-tools', range, limit),
   getActiveTime: (range) => ipcRenderer.invoke('get-active-time', range),
   getOverallStats: () => ipcRenderer.invoke('get-overall-stats'),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
 });

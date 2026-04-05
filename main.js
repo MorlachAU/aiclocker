@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { getDb, closeDb, setDataDir } = require('./src/db');
@@ -19,7 +19,7 @@ try {
 }
 
 // Hide from taskbar when no windows are open
-app.setAppUserModelId('com.benkirtland.aiclocker');
+app.setAppUserModelId('com.mousewheeldigital.aiclocker');
 
 let dashboardWindow = null;
 let trayHandle = null;
@@ -97,6 +97,25 @@ function registerIpcHandlers() {
 
   ipcMain.handle('get-overall-stats', () => {
     return stats.getOverallStats();
+  });
+
+  // Allow the dashboard to open external links in the user's default browser.
+  // Whitelist the protocols to avoid abuse from injected content.
+  ipcMain.handle('open-external', async (event, url) => {
+    if (typeof url !== 'string') return { ok: false, error: 'url must be a string' };
+    const allowed = /^(https?|mailto):/i;
+    if (!allowed.test(url)) return { ok: false, error: 'protocol not allowed' };
+    await shell.openExternal(url);
+    return { ok: true };
+  });
+
+  ipcMain.handle('copy-to-clipboard', (event, text) => {
+    clipboard.writeText(String(text || ''));
+    return { ok: true };
+  });
+
+  ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
   });
 }
 
