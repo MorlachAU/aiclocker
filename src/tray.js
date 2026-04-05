@@ -24,7 +24,7 @@ function formatDuration(ms) {
 }
 
 function buildContextMenu(callbacks) {
-  const { onOpenDashboard, onToggleStartup, onQuit } = callbacks;
+  const { onOpenDashboard, onToggleStartup, onAbout, onQuit } = callbacks;
 
   const todayRange = stats.getTodayRange();
   const weekRange = stats.getWeekRange();
@@ -93,6 +93,7 @@ function buildContextMenu(callbacks) {
   }
 
   menuItems.push({ label: 'Open Dashboard', click: onOpenDashboard });
+  menuItems.push({ label: 'About AIClocker...', click: onAbout });
   menuItems.push({ type: 'separator' });
 
   // Hide the auto-start toggle in portable builds — it would write a
@@ -112,7 +113,7 @@ function buildContextMenu(callbacks) {
   return Menu.buildFromTemplate(menuItems);
 }
 
-function createTray(onOpenDashboard, onToggleStartup, onQuit) {
+function createTray(onOpenDashboard, onToggleStartup, onAbout, onQuit) {
   const iconPath = path.join(__dirname, '..', 'icon.png');
   let icon;
   try {
@@ -124,7 +125,7 @@ function createTray(onOpenDashboard, onToggleStartup, onQuit) {
   tray = new Tray(icon);
   tray.setToolTip('AIClocker');
 
-  const callbacks = { onOpenDashboard, onToggleStartup, onQuit };
+  const callbacks = { onOpenDashboard, onToggleStartup, onAbout, onQuit };
 
   const refresh = () => {
     try {

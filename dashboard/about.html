@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>About AIClocker</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Modal-specific tweaks — the About dialog is a standalone small window
+       so it doesn't need the full dashboard padding/layout. */
+    body {
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .about-dialog {
+      background: #161b22;
+      padding: 28px 24px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .about-dialog .about-logo {
+      width: 96px;
+      height: auto;
+      margin-bottom: 4px;
+    }
+    .about-dialog .about-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f0f3f6;
+      margin: 4px 0 0;
+    }
+    .about-dialog .about-version {
+      font-size: 13px;
+      color: #8b949e;
+      margin: 0 0 10px;
+    }
+    .about-dialog .about-attribution {
+      font-size: 14px;
+      color: #e1e4e8;
+      margin: 0;
+    }
+    .about-dialog .about-attribution strong {
+      color: #00c8a0;
+    }
+    .about-dialog .about-tagline {
+      font-size: 12px;
+      color: #8b949e;
+      font-style: italic;
+      margin: 0 0 14px;
+    }
+    .about-dialog .about-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+    .about-dialog .about-btn {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      width: 100%;
+    }
+    .about-dialog .about-btn-link {
+      background: transparent;
+      color: #e1e4e8;
+      border: 1px solid #30363d;
+    }
+    .about-dialog .about-btn-link:hover {
+      border-color: #8b949e;
+      background: #1c2128;
+    }
+    .about-dialog .about-btn-bmac {
+      background: #FFDD00;
+      color: #000;
+      border: none;
+      font-weight: 600;
+    }
+    .about-dialog .about-btn-bmac:hover { filter: brightness(1.05); }
+    .about-dialog .about-feedback {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #8b949e;
+      margin: 4px 0 12px;
+    }
+    .about-dialog .about-feedback-email {
+      color: #e1e4e8;
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 11px;
+    }
+    .about-dialog .about-copy-btn {
+      background: #30363d;
+      color: #e1e4e8;
+      border: none;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .about-dialog .about-copy-btn:hover { background: #3d444d; }
+    .about-dialog .about-copy-btn.copied { background: #2ea043; }
+    .about-dialog .about-credit {
+      font-size: 11px;
+      color: #6e7681;
+      margin: 0;
+    }
+    .about-dialog .about-link {
+      color: #6e40c9;
+      cursor: pointer;
+    }
+    .about-dialog .about-link:hover { text-decoration: underline; }
+    .about-close {
+      margin-top: 14px;
+      background: #30363d;
+      color: #e1e4e8;
+      border: none;
+      padding: 6px 24px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .about-close:hover { background: #3d444d; }
+  </style>
+</head>
+<body>
+  <div class="about-dialog">
+    <img src="assets/mousewheel_logo.png" alt="MouseWheel Digital" class="about-logo">
+    <h2 class="about-title">AIClocker</h2>
+    <p class="about-version" id="aboutVersion">Version 1.1.1</p>
+    <p class="about-attribution">A <strong>MouseWheel Digital</strong> product</p>
+    <p class="about-tagline">Digital products. Built with purpose.</p>
+
+    <div class="about-buttons">
+      <button class="about-btn about-btn-link" data-url="https://www.mousewheeldigital.com/">
+        mousewheeldigital.com
+      </button>
+      <button class="about-btn about-btn-bmac" data-url="https://buymeacoffee.com/mousewheeldigital">
+        ☕ Buy Me a Coffee
+      </button>
+      <button class="about-btn about-btn-link" data-url="https://github.com/MorlachAU/aiclocker">
+        GitHub
+      </button>
+    </div>
+
+    <div class="about-feedback">
+      <span>Feedback:</span>
+      <span class="about-feedback-email">feedback@mousewheeldigital.com</span>
+      <button class="about-copy-btn" id="copyFeedbackBtn">Copy</button>
+    </div>
+
+    <p class="about-credit">
+      Built with the assistance of
+      <span class="about-link" data-url="https://claude.com/claude-code">Claude Code</span>
+      by Anthropic
+    </p>
+
+    <button class="about-close" id="closeBtn">Close</button>
+  </div>
+
+  <script>
+    // External links
+    document.querySelectorAll('[data-url]').forEach(el => {
+      el.addEventListener('click', () => {
+        const url = el.dataset.url;
+        if (url) window.electronAPI.openExternal(url);
+      });
+    });
+
+    // Copy feedback email
+    const copyBtn = document.getElementById('copyFeedbackBtn');
+    copyBtn.addEventListener('click', async () => {
+      await window.electronAPI.copyToClipboard('feedback@mousewheeldigital.com');
+      copyBtn.textContent = 'Copied';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.remove('copied');
+      }, 1500);
+    });
+
+    // Close button
+    document.getElementById('closeBtn').addEventListener('click', () => {
+      window.electronAPI.closeAboutDialog();
+    });
+
+    // Escape key closes
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.electronAPI.closeAboutDialog();
+    });
+
+    // Load real version
+    (async () => {
+      try {
+        const v = await window.electronAPI.getAppVersion();
+        if (v) document.getElementById('aboutVersion').textContent = 'Version ' + v;
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

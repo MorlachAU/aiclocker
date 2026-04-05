@@ -244,38 +244,6 @@ document.querySelectorAll('.range-btn').forEach(btn => {
   });
 });
 
-// About section — external links and clipboard
-document.querySelectorAll('[data-url]').forEach(el => {
-  el.addEventListener('click', () => {
-    const url = el.dataset.url;
-    if (url) electronAPI.openExternal(url);
-  });
-});
-
-const copyBtn = document.getElementById('copyFeedbackBtn');
-if (copyBtn) {
-  copyBtn.addEventListener('click', async () => {
-    await electronAPI.copyToClipboard('feedback@mousewheeldigital.com');
-    copyBtn.textContent = 'Copied';
-    copyBtn.classList.add('copied');
-    setTimeout(() => {
-      copyBtn.textContent = 'Copy';
-      copyBtn.classList.remove('copied');
-    }, 1500);
-  });
-}
-
-// Display the real app version in the About section
-(async () => {
-  if (electronAPI.getAppVersion) {
-    try {
-      const v = await electronAPI.getAppVersion();
-      const el = document.getElementById('aboutVersion');
-      if (el && v) el.textContent = 'Version ' + v;
-    } catch (e) { /* non-fatal */ }
-  }
-})();
-
 // Initial load
 refreshAll();
 

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, clipboard } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { getDb, closeDb, setDataDir } = require('./src/db');
@@ -22,6 +22,7 @@ try {
 app.setAppUserModelId('com.mousewheeldigital.aiclocker');
 
 let dashboardWindow = null;
+let aboutWindow = null;
 let trayHandle = null;
 
 function resolveRange(range) {
@@ -34,6 +35,64 @@ function resolveRange(range) {
       if (range && range.startMs !== undefined) return range;
       return stats.getTodayRange();
   }
+}
+
+function buildDashboardMenu() {
+  const template = [
+    {
+      label: '&File',
+      submenu: [
+        {
+          label: 'Close Window',
+          accelerator: 'CmdOrCtrl+W',
+          click: () => dashboardWindow && dashboardWindow.close(),
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit AIClocker',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => app.quit(),
+        },
+      ],
+    },
+    {
+      label: '&View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'togglefullscreen' },
+        { type: 'separator' },
+        { role: 'toggleDevTools' },
+      ],
+    },
+    {
+      label: '&Help',
+      submenu: [
+        {
+          label: 'View on GitHub',
+          click: () => shell.openExternal('https://github.com/MorlachAU/aiclocker'),
+        },
+        {
+          label: 'Report an Issue',
+          click: () => shell.openExternal('https://github.com/MorlachAU/aiclocker/issues'),
+        },
+        { type: 'separator' },
+        {
+          label: 'MouseWheel Digital',
+          click: () => shell.openExternal('https://www.mousewheeldigital.com/'),
+        },
+        {
+          label: 'Buy Me a Coffee',
+          click: () => shell.openExternal('https://buymeacoffee.com/mousewheeldigital'),
+        },
+        { type: 'separator' },
+        {
+          label: 'About AIClocker',
+          click: () => openAbout(dashboardWindow),
+        },
+      ],
+    },
+  ];
+  return Menu.buildFromTemplate(template);
 }
 
 function openDashboard() {
@@ -54,10 +113,47 @@ function openDashboard() {
     },
   });
 
+  dashboardWindow.setMenu(buildDashboardMenu());
   dashboardWindow.loadFile(path.join(__dirname, 'dashboard', 'index.html'));
 
   dashboardWindow.on('closed', () => {
     dashboardWindow = null;
+  });
+}
+
+function openAbout(parentWindow) {
+  if (aboutWindow) {
+    aboutWindow.focus();
+    return;
+  }
+
+  const opts = {
+    width: 440,
+    height: 620,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    title: 'About AIClocker',
+    icon: path.join(__dirname, 'icon.png'),
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'src', 'preload-about.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  };
+
+  if (parentWindow) {
+    opts.parent = parentWindow;
+    opts.modal = true;
+  }
+
+  aboutWindow = new BrowserWindow(opts);
+  aboutWindow.setMenu(null);
+  aboutWindow.loadFile(path.join(__dirname, 'dashboard', 'about.html'));
+
+  aboutWindow.on('closed', () => {
+    aboutWindow = null;
   });
 }
 
@@ -116,6 +212,10 @@ function registerIpcHandlers() {
 
   ipcMain.handle('get-app-version', () => {
     return app.getVersion();
+  });
+
+  ipcMain.on('close-about-dialog', () => {
+    if (aboutWindow) aboutWindow.close();
   });
 }
 
@@ -282,6 +382,7 @@ app.on('ready', async () => {
   trayHandle = createTray(
     openDashboard,
     toggleStartWithWindows,
+    () => openAbout(null),  // from tray there's no parent window for the modal
     () => {
       watcher.stop();
       destroyTray();
