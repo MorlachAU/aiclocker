@@ -4,6 +4,8 @@ How AIClocker works under the hood. Written for someone who wants to understand 
 
 As of **v1.1.0**, AIClocker uses a plugin architecture. Individual AI tools are encapsulated as providers in `src/providers/`, and the core ingestion/stats/UI code is provider-agnostic. See [PROVIDERS.md](PROVIDERS.md) for how to add a new tool.
 
+**v1.2.0** added a Help menu on the dashboard window, a standalone About dialog (`dashboard/about.html`) with its own preload (`src/preload-about.js`), new IPC endpoints for opening external links and the system clipboard, a signed NSIS installer + portable build, an auto-updater wired to GitHub Releases, a self-signed code-signing cert generated via PowerShell, and a post-commit hook that auto-syncs the `aiclocker/` subtree to the public mirror at https://github.com/MorlachAU/aiclocker.
+
 ---
 
 ## High-level flow
@@ -254,31 +256,134 @@ This gives a reasonable approximation: rapid back-and-forth counts as continuous
 
 ---
 
-## IPC bridge (preload.js)
+## IPC bridges
 
-The dashboard runs in a sandboxed BrowserWindow with `contextIsolation: true` and `nodeIntegration: false`. It can't access Node APIs or the database directly.
+Every renderer window runs sandboxed (`contextIsolation: true`, `nodeIntegration: false`) and cannot touch Node APIs, SQLite, or the filesystem directly. Two preload scripts expose narrow, explicit APIs via `contextBridge.exposeInMainWorld`:
 
-Instead, `src/preload.js` exposes a safe API via `contextBridge.exposeInMainWorld`:
+### `src/preload.js` — dashboard window
+
+Exposes the stats/query functions plus a small set of utilities:
 
 ```js
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Stats queries (answered by stats.js)
   getStats: (range) => ipcRenderer.invoke('get-stats', range),
   getModelBreakdown: (range) => ipcRenderer.invoke('get-model-breakdown', range),
-  // ... etc
+  getDailyBreakdown: (days) => ipcRenderer.invoke('get-daily-breakdown', days),
+  getTokenTypeBreakdown: (range) => ipcRenderer.invoke('get-token-type-breakdown', range),
+  getSessionList: (limit, offset) => ipcRenderer.invoke('get-session-list', limit, offset),
+  getTopTools: (range, limit) => ipcRenderer.invoke('get-top-tools', range, limit),
+  getActiveTime: (range) => ipcRenderer.invoke('get-active-time', range),
+  getOverallStats: () => ipcRenderer.invoke('get-overall-stats'),
+  // Utilities (added in v1.2.0)
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
 });
 ```
 
-The main process (`main.js`) registers matching `ipcMain.handle` handlers that call into `stats.js` and return results. This keeps the dashboard secure — it can only call the specific query functions we expose, not run arbitrary code.
+### `src/preload-about.js` — About dialog window
+
+Minimal bridge with just what the About dialog needs:
+
+```js
+contextBridge.exposeInMainWorld('electronAPI', {
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  closeAboutDialog: () => ipcRenderer.send('close-about-dialog'),
+});
+```
+
+### Main-process handlers
+
+`main.js` registers matching `ipcMain.handle` / `ipcMain.on` handlers. Three principles govern them:
+
+1. **Explicit allowlist for opening URLs.** `open-external` only permits `http:`, `https:`, and `mailto:` protocols. Anything else returns `{ ok: false, error: 'protocol not allowed' }`. This prevents a compromised renderer from launching arbitrary local programs via custom protocol handlers.
+2. **No arbitrary SQL or file access.** The dashboard can only call the specific stat helpers we expose — not run queries or read files.
+3. **Two preloads, not one shared.** The About window has its own minimal preload so the dashboard-specific stats APIs aren't exposed to a window that doesn't need them.
+
+---
+
+## Help menu and About dialog (v1.2.0)
+
+### Dashboard window menu bar
+
+`main.js` calls `dashboardWindow.setMenu(buildDashboardMenu())` to install a standard Windows menu bar. The menu has three top-level items:
+
+```
+File                 View                Help
+├ Close Window       ├ Reload            ├ View on GitHub
+└ Quit AIClocker     ├ Fullscreen        ├ Report an Issue
+                     └ DevTools          ├ ─────────────
+                                         ├ MouseWheel Digital
+                                         ├ Buy Me a Coffee
+                                         ├ ─────────────
+                                         └ About AIClocker
+```
+
+Menu items that open external URLs call `shell.openExternal()` directly from the main process (no IPC round-trip needed since they originate in main).
+
+### About dialog window
+
+`Help → About AIClocker` (and the tray menu's "About AIClocker..." entry) calls `openAbout(parentWindow)`, which creates a 440×620 non-resizable `BrowserWindow` loading `dashboard/about.html`:
+
+- **Modal** when opened from the Help menu (parent = dashboardWindow)
+- **Non-modal standalone** when opened from the tray (parent = null)
+- Own preload script (`src/preload-about.js`)
+- Menu bar hidden via `autoHideMenuBar: true` + `setMenu(null)`
+- Closes on the Close button, Escape key, or the window X
+
+### about.html content
+
+Mirrors the Display Manager / MouseWheel Digital branding template:
+- 96px `mousewheel_logo.png`
+- App title + dynamic version (fetched via `getAppVersion()` IPC on load)
+- "A **MouseWheel Digital** product" with `#00c8a0` teal accent
+- Italic tagline
+- Three vertically-stacked buttons (website, BMAC, GitHub)
+- Feedback email with Copy-to-clipboard button
+- Claude Code credit
+
+---
+
+## Public repo sync automation
+
+`aiclocker/` lives as a subdirectory in the private `E:\Dev` monorepo but is mirrored to the public [github.com/MorlachAU/aiclocker](https://github.com/MorlachAU/aiclocker). Two pieces make this automatic:
+
+### `scripts/sync-public.js`
+
+Standalone Node script. Operates on the parent git repo (`E:\Dev`) regardless of where it's invoked from. Flow:
+
+1. Sanity check: `git rev-parse --git-dir` and verify `aiclocker/` exists in `HEAD`
+2. Ensure the `aiclocker` remote is registered (idempotent — adds it if missing)
+3. Delete any leftover `aiclocker-public` branch from a previous run
+4. `git subtree split --prefix=aiclocker -b aiclocker-public` — extracts history
+5. `git push aiclocker aiclocker-public:main`
+6. Delete the local split branch regardless of push outcome
+
+Supports `--dry` (prints plan without pushing) and `--quiet` (suppresses non-error output, used by the hook).
+
+### `.git/hooks/post-commit`
+
+Local shell script (not tracked, lives in `E:\Dev\.git\hooks\`). Fires after every commit. Behavior:
+
+1. Check if the commit touched `aiclocker/` — skip if not (fast path for unrelated monorepo commits)
+2. Check the `AICLOCKER_SYNC_IN_PROGRESS` env var to prevent recursion
+3. Run `node aiclocker/scripts/sync-public.js --quiet`
+4. Print success or warning line — **never fails the commit** even if the push errors out
+
+This means every `git commit` in `E:\Dev` that touches `aiclocker/` automatically mirrors to the public repo. Failures are non-fatal and get logged; manual retry is `cd aiclocker && npm run sync`.
 
 ---
 
 ## Electron process model
 
-- **Main process** (`main.js`) — owns the database, tray, file watcher, and IPC handlers
-- **Renderer process** (dashboard) — sandboxed, receives data via IPC only
-- **No second renderer** — the quick-entry popup was removed when manual logging was cut
+- **Main process** (`main.js`) — owns the database, tray, file watcher, IPC handlers, menu construction, and window lifecycles
+- **Dashboard renderer** — sandboxed, uses `src/preload.js`, lives while the dashboard window is open
+- **About dialog renderer** — sandboxed, uses `src/preload-about.js`, modal or non-modal depending on how it was opened
 
-The app starts with no windows visible (`window-all-closed` is prevented). The dashboard window is created on demand when the user clicks "Open Dashboard" and destroyed when closed.
+The app starts with no windows visible (`window-all-closed` is prevented so closing the last window doesn't quit the app). All windows are created on demand and destroyed on close.
 
 ---
 

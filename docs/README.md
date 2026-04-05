@@ -162,9 +162,10 @@ That's it — no changes to ingest, stats, tray, dashboard, or database schema n
 
 ```
 E:\Dev\aiclocker\
-├── main.js                 # Electron entry point
-├── icon.png, icon.ico      # App icons
-├── package.json            # Includes electron-builder config
+├── main.js                 # Electron entry point — window lifecycle, menu, IPC handlers
+├── LICENSE                 # MIT
+├── icon.png, icon.ico      # App icons (multi-resolution)
+├── package.json            # Includes electron-builder + publish config
 ├── src/
 │   ├── db.js               # SQLite + schema migrations + data dir resolution
 │   ├── parser.js           # JSONL line parser (provider-normalized)
@@ -176,6 +177,7 @@ E:\Dev\aiclocker\
 │   ├── tray.js             # Tray icon + context menu
 │   ├── settings.js         # User preferences (JSON)
 │   ├── preload.js          # Dashboard IPC bridge
+│   ├── preload-about.js    # About-dialog IPC bridge (narrow surface)
 │   └── providers/
 │       ├── provider-base.js  # Abstract Provider class
 │       ├── index.js          # Provider registry
@@ -183,21 +185,26 @@ E:\Dev\aiclocker\
 │       ├── cowork.js         # Claude Co-Work provider
 │       └── _template.js      # Template for adding new providers
 ├── dashboard/
-│   ├── index.html          # Dashboard UI
+│   ├── index.html          # Dashboard UI (charts + session table)
+│   ├── about.html          # About dialog (MouseWheel branding + BMAC)
 │   ├── style.css
 │   ├── dashboard.js        # Frontend logic
-│   └── chart.min.js        # Chart.js (vendored)
+│   ├── chart.min.js        # Chart.js (vendored)
+│   └── assets/
+│       └── mousewheel_logo.png  # Brand logo used in About dialog
 ├── scripts/
 │   ├── make-icon.js        # Generate clock icon PNG + ICO
-│   └── make-cert.js        # Generate self-signed code-signing cert
+│   ├── make-cert.js        # Generate self-signed code-signing cert
+│   ├── sync-public.js      # Extract + push aiclocker/ subtree to public repo
+│   └── preview-server.js   # Local static server w/ stubbed electronAPI
 ├── certs/                  # (gitignored) signing cert + password
 ├── data/                   # (gitignored) dev DB
-├── release/                # (gitignored) electron-builder output
+├── release/                # (gitignored) electron-builder output (.exe + latest.yml)
 └── docs/
     ├── README.md           # This file
     ├── CHANGELOG.md        # Version history
     ├── ARCHITECTURE.md     # Technical deep-dive
-    ├── INSTALL.md          # End-user install guide
+    ├── INSTALL.md          # End-user install guide (installer + portable)
     └── PROVIDERS.md        # How to add a new provider
 ```
 
