@@ -60,7 +60,7 @@ Major release: renamed to **AIClocker**, refactored into a plugin architecture, 
   - Users can eliminate SmartScreen warnings by importing the `.cer` file (instructions in `certs/README.md` and `docs/INSTALL.md`)
 - **Auto-updater** via electron-updater
   - Wired into `main.js` with 6-hour check interval
-  - Publishes to GitHub Releases (`MorlachAU/aiclocker-releases`) via `npm run build:publish`
+  - Publishes to GitHub Releases (`MorlachAU/aiclocker`) via `npm run build:publish`
   - Runs only in packaged builds — gracefully no-ops when running from source
   - Auto-download + install-on-quit behavior
   - Errors logged as warnings (won't crash the app if GitHub is unreachable or release doesn't exist)
