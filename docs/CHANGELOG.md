@@ -9,6 +9,61 @@ Versioning follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH
 
 ---
 
+## [1.2.0] — 2026-04-06
+
+First public release milestone. Adds MouseWheel Digital branding, a proper Help menu with About dialog, the LICENSE file, and end-to-end automation for the public GitHub mirror.
+
+### Added
+- **Help menu on the dashboard window** (File / View / Help menubar via `Menu.setMenu()`)
+  - `File → Close Window`, `File → Quit` (Ctrl+W / Ctrl+Q)
+  - `View → Reload`, `View → Fullscreen`, `View → Toggle DevTools`
+  - `Help → View on GitHub` → MorlachAU/aiclocker
+  - `Help → Report an Issue` → repo issues page
+  - `Help → MouseWheel Digital` → mousewheeldigital.com
+  - `Help → Buy Me a Coffee` → buymeacoffee.com/mousewheeldigital
+  - `Help → About AIClocker` → opens modal dialog
+- **About dialog** (`dashboard/about.html`)
+  - Dedicated 440×620 BrowserWindow with its own preload (`src/preload-about.js`)
+  - Shows 96px MouseWheel logo, app title, dynamic version from `package.json`, "A MouseWheel Digital product" line (with `#00c8a0` teal accent), italic tagline, and three buttons:
+    - `mousewheeldigital.com` (transparent, bordered)
+    - `☕ Buy Me a Coffee` (`#FFDD00` yellow, black text — house style)
+    - `GitHub`
+  - Feedback email (`feedback@mousewheeldigital.com`) with Copy button that briefly turns green + "Copied" on click
+  - "Built with the assistance of Claude Code by Anthropic" credit
+  - Close button, Escape key, and clicking outside all dismiss the dialog
+  - Modal when opened from the Help menu, non-modal when opened from the tray
+- **"About AIClocker..." entry in the tray context menu**
+- **MouseWheel Digital branding throughout**
+  - `dashboard/assets/mousewheel_logo.png` (copied from `E:\Dev\01 Logos\logo_variant_4_transparent.png`)
+  - README header: centered logo + four shields badges (MouseWheel Digital teal, BMAC yellow, latest release purple, MIT blue)
+  - README footer with logo, "A MouseWheel Digital product", tagline, Claude Code credit
+  - `package.json` metadata: structured `author` object, `homepage`, `repository`, `bugs` URLs, `copyright` line
+  - `appUserModelId` changed from `com.benkirtland.aiclocker` to `com.mousewheeldigital.aiclocker`
+- **LICENSE file** — MIT, copyright Ben Kirtland 2026
+- **New IPC bridge endpoints** (exposed via `src/preload.js` and `src/preload-about.js`)
+  - `open-external` — whitelists `http:`, `https:`, and `mailto:` through `shell.openExternal()`
+  - `copy-to-clipboard` — writes to the system clipboard via `clipboard.writeText()`
+  - `get-app-version` — returns `app.getVersion()` for dynamic version display
+  - `close-about-dialog` — lets the About window close itself via the preload bridge
+- **Automated public repo sync**
+  - `scripts/sync-public.js` extracts `aiclocker/` history via `git subtree split` and pushes to `MorlachAU/aiclocker` on GitHub. Supports `--dry` and `--quiet` modes.
+  - `npm run sync` / `npm run sync:dry` scripts
+  - `.git/hooks/post-commit` (local, not tracked) auto-runs the sync after any commit that touches `aiclocker/`. Failures are non-fatal.
+  - Public repo live at **https://github.com/MorlachAU/aiclocker**
+
+### Fixed
+- **Dashboard chart sizing** — Chart.js canvases were growing unbounded because their containers had no fixed height. Each `.chart-container` is now a 280px flex column and each canvas lives inside a `position: relative` `.chart-body` wrapper.
+
+### Changed
+- Dashboard footer removed — its branding content now lives in the About dialog accessed via `Help → About AIClocker`
+- `createTray()` signature expanded with a new `onAbout` callback
+- `publish` config in `package.json` points at `MorlachAU/aiclocker` (single repo for source + releases) instead of the originally planned `aiclocker-releases` split
+
+### Infrastructure
+- New `scripts/preview-server.js` — tiny static server that serves the dashboard with a stubbed `electronAPI` so CSS/JS tweaks can be verified in a browser without rebuilding the Electron app
+
+---
+
 ## [1.1.1] — 2026-04-06
 
 ### Added

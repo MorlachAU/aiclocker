@@ -13,7 +13,7 @@
 
 A Windows system tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Ships with built-in support for **Claude Code** and **Claude Co-Work**, and has a plugin architecture for adding more tools.
 
-**Current version:** 1.1.1
+**Current version:** 1.2.0
 **Platform:** Windows 11 (Electron 35)
 **Author:** Ben Kirtland — *A MouseWheel Digital product*
 

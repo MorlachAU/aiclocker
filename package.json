@@ -1,7 +1,7 @@
 {
   "name": "aiclocker",
   "productName": "AIClocker",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Windows tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Supports Claude Code and Claude Co-Work with a plugin architecture for adding more tools.",
   "main": "main.js",
   "scripts": {
