@@ -9,6 +9,36 @@ Versioning follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH
 
 ---
 
+## [1.2.2] — 2026-04-06
+
+Fixes the update notification on self-signed builds.
+
+### Background
+
+v1.2.0 and v1.2.1 used `electron-updater` which does strict code-signing trust-chain verification before installing a downloaded update. Because AIClocker is signed with a self-signed certificate whose root isn't in Windows' Trusted Root store, the check always failed with:
+
+> New version X.Y.Z is not signed by the application owner: ... A certificate chain processed, but terminated in a root certificate which is not trusted by the trust provider.
+
+v1.2.1 updates were detected and downloaded to `%LOCALAPPDATA%\aiclocker-updater\pending\temp-AIClocker-Setup.exe` but silently refused to install. Users had no idea an update existed.
+
+### Changed
+
+- **Replaced `electron-updater` with a tiny homegrown GitHub release checker** (`src/update-checker.js`, ~90 lines). This is the same pattern DisplayPal uses. On launch and every 6 hours after, it:
+  1. Hits `https://api.github.com/repos/MorlachAU/aiclocker/releases/latest`
+  2. Compares the `tag_name` to `app.getVersion()`
+  3. If newer, shows a native Windows notification
+  4. Clicking the notification opens the release page in the browser
+  5. User downloads and runs the new installer themselves
+- **No more silent sig-verification failures.** The new checker never downloads or installs anything, so there's nothing for Windows' trust chain to reject.
+- **Removed `electron-updater` dependency** (~50 MB of node_modules gone). Replaced with Node's built-in `https` module.
+- **`latest.yml` is no longer needed** in GitHub releases. Still harmless to include, but future releases only need the .exe files.
+
+### Trade-off
+
+Updates aren't "silent" anymore — users see a notification and have to click through a download + installer. For a personal/internal tool signed with a self-signed cert, this is a cleaner trust model anyway: the user is explicitly approving each update.
+
+---
+
 ## [1.2.1] — 2026-04-06
 
 Small infrastructure release — no user-facing feature changes.

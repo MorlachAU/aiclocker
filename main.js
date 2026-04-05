@@ -9,14 +9,7 @@ const watcher = require('./src/watcher');
 const settings = require('./src/settings');
 const { createTray, destroyTray } = require('./src/tray');
 
-// electron-updater is only available in the packaged app (it imports
-// node modules not present when running from source under `npm start`).
-let autoUpdater = null;
-try {
-  autoUpdater = require('electron-updater').autoUpdater;
-} catch (e) {
-  // Running from source — updater is unavailable and not needed
-}
+const updateChecker = require('./src/update-checker');
 
 // Hide from taskbar when no windows are open
 app.setAppUserModelId('com.mousewheeldigital.aiclocker');
@@ -318,40 +311,6 @@ function resolveDataDirAndMigrate() {
   console.log(`Using data directory: ${targetDataDir}`);
 }
 
-function setupAutoUpdater() {
-  if (!autoUpdater || !app.isPackaged) return;
-
-  autoUpdater.logger = {
-    info: (...args) => console.log('[updater]', ...args),
-    warn: (...args) => console.warn('[updater]', ...args),
-    error: (...args) => console.error('[updater]', ...args),
-    debug: () => {},
-  };
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on('update-available', (info) => {
-    console.log('[updater] update available:', info.version);
-  });
-  autoUpdater.on('update-not-available', () => {
-    console.log('[updater] no updates available');
-  });
-  autoUpdater.on('update-downloaded', (info) => {
-    console.log('[updater] update downloaded:', info.version, '— will install on next launch');
-  });
-  autoUpdater.on('error', (err) => {
-    // Self-signed certs and missing GitHub releases will land here — don't crash
-    console.warn('[updater] error:', err.message);
-  });
-
-  // Initial check + periodic re-check every 6 hours
-  autoUpdater.checkForUpdatesAndNotify().catch(e => {
-    console.warn('[updater] initial check failed:', e.message);
-  });
-  setInterval(() => {
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
-  }, 6 * 60 * 60 * 1000);
-}
 
 async function initialize() {
   resolveDataDirAndMigrate();
@@ -396,8 +355,10 @@ app.on('ready', async () => {
     if (trayHandle) trayHandle.refresh();
   });
 
-  // Kick off auto-updater in the background (packaged builds only)
-  setupAutoUpdater();
+  // Check GitHub for a newer release and show a notification if one exists.
+  // Does not auto-download — user clicks the notification to open the
+  // release page and installs the new version themselves.
+  updateChecker.start();
 
   console.log('AIClocker running in system tray.');
 });

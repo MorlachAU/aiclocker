@@ -1,7 +1,7 @@
 {
   "name": "aiclocker",
   "productName": "AIClocker",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Windows tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Supports Claude Code and Claude Co-Work with a plugin architecture for adding more tools.",
   "main": "main.js",
   "scripts": {
@@ -35,8 +35,7 @@
     "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
-    "better-sqlite3": "^12.8.0",
-    "electron-updater": "^6.8.3"
+    "better-sqlite3": "^12.8.0"
   },
   "build": {
     "appId": "com.mousewheeldigital.aiclocker",

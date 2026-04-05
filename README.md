@@ -15,7 +15,7 @@ A Windows system tray app that tracks your AI coding tool usage — tokens, API-
 
 > **Before you install:** AIClocker tracks **Claude Code** (the VS Code extension / CLI) and **Claude Co-Work**. It does **not** track chat usage on claude.ai or in the Claude Desktop app — that data lives server-side and Anthropic doesn't expose it. See [What it does NOT track](#what-it-does-not-track) for the full explanation.
 
-**Current version:** 1.2.1
+**Current version:** 1.2.2
 **Platform:** Windows 11 (Electron 35)
 **Author:** Ben Kirtland — *A MouseWheel Digital product*
 
