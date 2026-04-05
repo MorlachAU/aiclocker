@@ -1,18 +1,25 @@
 # Installing AIClocker
 
-This guide explains how to install the built AIClocker `.exe`, deal with the Windows SmartScreen warning, and uninstall cleanly.
+AIClocker ships in two flavors:
+
+| Flavor | File | Best for |
+|---|---|---|
+| **Installer** | `AIClocker-Setup-1.1.0.exe` | Normal use — installs to Program Files or user dir, adds Start Menu + desktop shortcuts, proper uninstaller, auto-updates |
+| **Portable** | `AIClocker-Portable-1.1.0.exe` | USB stick, restricted machines, "no traces" use — single exe, stores all data in a folder next to itself, zero registry writes |
+
+This guide covers both. Skip to [Portable version](#portable-version) if that's what you want.
 
 ---
 
 ## Requirements
 
 - Windows 10 or 11 (x64)
-- Approximately 250 MB free disk space
-- No special permissions needed for per-user install
+- Approximately 250 MB free disk space (installer) or 85 MB (portable)
+- No special permissions needed for per-user install or portable use
 
 ---
 
-## Install
+## Installer version
 
 1. Download `AIClocker-Setup-1.1.0.exe` from the releases page (or build it locally — see [README.md](README.md)).
 2. Double-click the `.exe`.
@@ -68,6 +75,37 @@ To disable, untick the same menu item.
 AIClocker checks for updates every 6 hours and on launch. When a new version is available, it downloads in the background and installs on next quit + restart. No action needed.
 
 To check manually, just quit and relaunch.
+
+---
+
+## Portable version
+
+No installation needed. Just run the exe.
+
+### How it works
+- Download `AIClocker-Portable-1.1.0.exe`
+- Put it anywhere — USB stick, `Documents`, a project folder, wherever
+- Double-click to run
+- First launch creates an `AIClocker-data/` folder **next to the exe** containing:
+  - `usage.db` — your stats database
+  - `electron/` — Electron's own cache/prefs
+  - Nothing else, nowhere else
+
+### Moving between machines
+Just copy the exe AND the `AIClocker-data/` folder together. The portable version never writes to the registry, never touches `%APPDATA%`, never leaves leftovers. To "uninstall", delete the two items and you're done.
+
+### SmartScreen
+Same as the installer — self-signed cert triggers "Unknown publisher". Click "More info → Run anyway".
+
+### Differences from the installer version
+- No Start Menu shortcut, no desktop shortcut (you make your own shortcuts if you want)
+- **No "Start with Windows" option** — hidden from the tray menu because writing registry autostart entries would be orphaned when the exe moves or gets deleted
+- No auto-updater — grab a newer portable exe manually when you want to update
+- No admin permissions ever
+- Nothing to uninstall
+
+### Data migration
+Portable builds do **not** copy data from an installed version. If you want to carry your history to a portable build, copy `%APPDATA%\AIClocker\data\usage.db` into the portable's `AIClocker-data\` folder manually.
 
 ---
 

@@ -94,13 +94,19 @@ function buildContextMenu(callbacks) {
 
   menuItems.push({ label: 'Open Dashboard', click: onOpenDashboard });
   menuItems.push({ type: 'separator' });
-  menuItems.push({
-    label: 'Start with Windows',
-    type: 'checkbox',
-    checked: !!settings.get('startWithWindows'),
-    click: onToggleStartup,
-  });
-  menuItems.push({ type: 'separator' });
+
+  // Hide the auto-start toggle in portable builds — it would write a
+  // registry entry that gets orphaned when the user moves or deletes the exe.
+  if (!process.env.PORTABLE_EXECUTABLE_DIR) {
+    menuItems.push({
+      label: 'Start with Windows',
+      type: 'checkbox',
+      checked: !!settings.get('startWithWindows'),
+      click: onToggleStartup,
+    });
+    menuItems.push({ type: 'separator' });
+  }
+
   menuItems.push({ label: 'Quit', click: onQuit });
 
   return Menu.buildFromTemplate(menuItems);

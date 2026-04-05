@@ -2,7 +2,7 @@
 
 A Windows system tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Ships with built-in support for **Claude Code** and **Claude Co-Work**, and has a plugin architecture for adding more tools.
 
-**Current version:** 1.1.0
+**Current version:** 1.1.1
 **Platform:** Windows 11 (Electron 35)
 **Author:** Ben Kirtland
 
@@ -56,11 +56,16 @@ set CSC_KEY_PASSWORD=<contents of certs\password.txt>
 npm run build
 ```
 
-The built installer lands at `release/AIClocker-Setup-1.1.0.exe`. Double-click to install. Because the cert is self-signed, Windows SmartScreen will show "Unknown publisher" on first run — click "More info → Run anyway", or import `certs/aiclocker.cer` into Trusted Root Certification Authorities to eliminate the warning.
+Each build produces **two** signed artifacts in the output directory:
 
-The installer is NSIS-based and asks where to install (per-user or Program Files). It creates a Start Menu shortcut, a desktop shortcut, and a proper uninstaller.
+| File | Type | Use when |
+|---|---|---|
+| `AIClocker-Setup-1.1.0.exe` | NSIS installer | You want a proper install with Start Menu shortcut, auto-updates, uninstaller |
+| `AIClocker-Portable-1.1.0.exe` | Portable exe | You want a single exe with zero footprint — stores data in a folder next to itself, no registry writes, no `%APPDATA%` leftovers |
 
-See [INSTALL.md](INSTALL.md) for more detail.
+Double-click either to run. Because the cert is self-signed, Windows SmartScreen will show "Unknown publisher" on first run — click "More info → Run anyway", or import `certs/aiclocker.cer` into Trusted Root Certification Authorities to eliminate the warning.
+
+See [INSTALL.md](INSTALL.md) for more detail on both flavors.
 
 ---
 

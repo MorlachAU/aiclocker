@@ -9,6 +9,23 @@ Versioning follows [Semantic Versioning](https://semver.org/): MAJOR.MINOR.PATCH
 
 ---
 
+## [1.1.1] — 2026-04-06
+
+### Added
+- **Portable build target.** electron-builder now produces two artifacts per build:
+  - `AIClocker-Setup-1.1.0.exe` — the NSIS installer (unchanged)
+  - `AIClocker-Portable-1.1.0.exe` — single-exe portable version
+- **Portable data directory** — when launched via the portable build, `main.js` detects `process.env.PORTABLE_EXECUTABLE_DIR` and stores the SQLite database and Electron user data in `<exe-dir>/AIClocker-data/`. Nothing is written to `%APPDATA%`, the registry, or any other machine-global location.
+- **Portable-mode guards:**
+  - `applyStartWithWindows()` no-ops when running from a portable build (avoids orphaned Startup registry entries after the exe is moved or deleted)
+  - Tray menu hides the "Start with Windows" checkbox in portable mode
+- **Documentation** — [INSTALL.md](INSTALL.md) now covers both flavors with a portable version walkthrough
+
+### Changed
+- `package.json` build config: `win.target` is now an array with both `nsis` and `portable` entries; `artifactName` moved from the win level into the nsis and portable sub-configs for per-target naming
+
+---
+
 ## [1.1.0] — 2026-04-06
 
 Major release: renamed to **AIClocker**, refactored into a plugin architecture, and shipped as an installable Windows app.

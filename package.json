@@ -1,7 +1,7 @@
 {
   "name": "aiclocker",
   "productName": "AIClocker",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Windows tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Supports Claude Code and Claude Co-Work with a plugin architecture for adding more tools.",
   "main": "main.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "appId": "com.benkirtland.aiclocker",
     "productName": "AIClocker",
     "directories": {
-      "output": "release"
+      "output": "release2"
     },
     "files": [
       "main.js",
@@ -54,16 +54,24 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "icon.ico",
-      "artifactName": "AIClocker-Setup-${version}.${ext}",
       "signAndEditExecutable": true,
       "signtoolOptions": {
         "signingHashAlgorithms": [
           "sha256"
         ]
       }
+    },
+    "portable": {
+      "artifactName": "AIClocker-Portable-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -75,7 +83,8 @@
       "shortcutName": "AIClocker",
       "uninstallDisplayName": "AIClocker",
       "deleteAppDataOnUninstall": false,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "artifactName": "AIClocker-Setup-${version}.${ext}"
     },
     "publish": {
       "provider": "github",

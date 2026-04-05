@@ -101,6 +101,11 @@ function registerIpcHandlers() {
 }
 
 function applyStartWithWindows(enabled) {
+  // Portable builds should not write login-item registry entries — the user
+  // can run the exe from anywhere and moving/deleting it would leave a
+  // broken Startup entry behind.
+  if (process.env.PORTABLE_EXECUTABLE_DIR) return;
+
   app.setLoginItemSettings({
     openAtLogin: !!enabled,
     // Hide the window on login — app runs in tray only
@@ -123,20 +128,36 @@ function toggleStartWithWindows() {
  * Resolve the data directory and migrate an older database if needed.
  *
  * Priority:
- *   1. Packaged app  → %APPDATA%/AIClocker/data   (via app.getPath('userData'))
- *   2. Dev / run from source → <projectRoot>/data (legacy behavior)
+ *   1. Portable build → <folder next to AIClocker-Portable.exe>/data
+ *      (detected via PORTABLE_EXECUTABLE_DIR set by electron-builder at runtime)
+ *   2. Installed app  → %APPDATA%/AIClocker/data (via app.getPath('userData'))
+ *   3. Dev / run from source → <projectRoot>/data (legacy behavior)
+ *
+ * The portable version keeps all state next to its .exe so the whole app
+ * can be moved between machines on a USB stick with no leftovers anywhere.
  *
  * If a database already exists at one of the legacy locations from the
- * pre-AIClocker rebrand, copy it over on first launch.
+ * pre-AIClocker rebrand, copy it over on first launch (installed builds only).
  */
 function resolveDataDirAndMigrate() {
+  const isPackaged = app.isPackaged;
+  const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
+
+  // Portable build — keep data next to the exe
+  if (isPackaged && portableDir) {
+    const targetDataDir = path.join(portableDir, 'AIClocker-data');
+    if (!fs.existsSync(targetDataDir)) {
+      fs.mkdirSync(targetDataDir, { recursive: true });
+    }
+    // Redirect Electron's userData so settings/caches stay near the exe too
+    app.setPath('userData', path.join(portableDir, 'AIClocker-data', 'electron'));
+    setDataDir(targetDataDir);
+    console.log(`Portable mode — data directory: ${targetDataDir}`);
+    return;
+  }
+
   const userDataDir = app.getPath('userData');
   const targetDataDir = path.join(userDataDir, 'data');
-
-  // Only redirect away from the project-local data dir when running packaged.
-  // When running from source (npm start), the existing project-local data
-  // dir keeps working for convenience.
-  const isPackaged = app.isPackaged;
 
   if (!isPackaged) {
     // Dev mode — keep using <projectRoot>/data (default in db.js)
