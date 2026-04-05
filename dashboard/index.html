@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AIClocker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>AIClocker</h1>
+    <div class="range-picker">
+      <button class="range-btn active" data-range="today">Today</button>
+      <button class="range-btn" data-range="week">This Week</button>
+      <button class="range-btn" data-range="month">This Month</button>
+      <button class="range-btn" data-range="all">All Time</button>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card">
+      <div class="card-label">API Equivalent</div>
+      <div class="card-value" id="totalCost">$0.00</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total Tokens</div>
+      <div class="card-value" id="totalTokens">0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Active Time</div>
+      <div class="card-value" id="activeTime">0m</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Sessions</div>
+      <div class="card-value" id="sessionCount">0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Messages</div>
+      <div class="card-value" id="messageCount">0</div>
+    </div>
+  </section>
+
+  <section class="charts-row">
+    <div class="chart-container">
+      <h3>Daily API Equivalent</h3>
+      <canvas id="dailyCostChart"></canvas>
+    </div>
+    <div class="chart-container chart-small">
+      <h3>Model Usage</h3>
+      <canvas id="modelChart"></canvas>
+    </div>
+  </section>
+
+  <section class="charts-row">
+    <div class="chart-container">
+      <h3>Token Breakdown by Day</h3>
+      <canvas id="tokenChart"></canvas>
+    </div>
+    <div class="chart-container chart-small">
+      <h3>Top Tools</h3>
+      <canvas id="toolsChart"></canvas>
+    </div>
+  </section>
+
+  <section class="sessions-section">
+    <h3>Sessions</h3>
+    <table id="sessionsTable">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Date</th>
+          <th>Duration</th>
+          <th>Messages</th>
+          <th>Tokens</th>
+          <th>API Eq.</th>
+        </tr>
+      </thead>
+      <tbody id="sessionsBody"></tbody>
+    </table>
+  </section>
+
+  <script src="chart.min.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

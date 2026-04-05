@@ -1,0 +1,8 @@
+node_modules/
+data/usage.db
+data/usage.db-wal
+data/usage.db-shm
+certs/
+dist/
+build-output/
+release/

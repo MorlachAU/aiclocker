@@ -1,0 +1,88 @@
+{
+  "name": "aiclocker",
+  "productName": "AIClocker",
+  "version": "1.1.0",
+  "description": "Windows tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Supports Claude Code and Claude Co-Work with a plugin architecture for adding more tools.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test-ingest": "node src/test-ingest.js",
+    "make-icon": "node scripts/make-icon.js",
+    "make-cert": "node scripts/make-cert.js",
+    "build:dir": "electron-builder --dir",
+    "build": "electron-builder",
+    "build:publish": "electron-builder --publish always"
+  },
+  "author": "Ben Kirtland",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.8.1",
+    "electron-rebuild": "^3.2.9"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "electron-updater": "^6.8.3"
+  },
+  "build": {
+    "appId": "com.benkirtland.aiclocker",
+    "productName": "AIClocker",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "src/**/*",
+      "dashboard/**/*",
+      "icon.png",
+      "icon.ico",
+      "package.json",
+      "!scripts/**/*",
+      "!certs/**/*",
+      "!dist/**/*",
+      "!data/**/*",
+      "!docs/**/*"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.ico",
+      "artifactName": "AIClocker-Setup-${version}.${ext}",
+      "signAndEditExecutable": true,
+      "signtoolOptions": {
+        "signingHashAlgorithms": [
+          "sha256"
+        ]
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AIClocker",
+      "uninstallDisplayName": "AIClocker",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "MorlachAU",
+      "repo": "aiclocker-releases",
+      "private": false,
+      "releaseType": "release"
+    }
+  }
+}

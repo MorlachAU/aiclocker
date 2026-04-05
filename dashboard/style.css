@@ -1,0 +1,145 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0f1117;
+  color: #e1e4e8;
+  padding: 20px 24px;
+  min-height: 100vh;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #f0f3f6;
+}
+
+h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #8b949e;
+  margin-bottom: 12px;
+}
+
+.range-picker {
+  display: flex;
+  gap: 4px;
+  background: #161b22;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.range-btn {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.range-btn:hover { color: #e1e4e8; }
+.range-btn.active { background: #6e40c9; color: #fff; }
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f0f3f6;
+}
+
+/* Charts */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.chart-container {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.chart-container.chart-small {
+  max-height: 280px;
+}
+
+/* Sessions table */
+.sessions-section {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #30363d;
+}
+
+td {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid #21262d;
+}
+
+tr:hover td { background: #1c2128; }
+
+td:nth-child(5), td:nth-child(6), th:nth-child(5), th:nth-child(6) {
+  text-align: right;
+}
+
+/* Color palette for charts */
+:root {
+  --opus: #6e40c9;
+  --sonnet: #2ea043;
+  --haiku: #1f6feb;
+  --input: #6e40c9;
+  --output: #2ea043;
+  --cache-write: #d29922;
+  --cache-read: #1f6feb;
+}

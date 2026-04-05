@@ -1,0 +1,268 @@
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const { getDb, closeDb, setDataDir } = require('./src/db');
+const { ingestAll } = require('./src/ingest');
+const { resolveSessions } = require('./src/session-resolver');
+const stats = require('./src/stats');
+const watcher = require('./src/watcher');
+const settings = require('./src/settings');
+const { createTray, destroyTray } = require('./src/tray');
+
+// electron-updater is only available in the packaged app (it imports
+// node modules not present when running from source under `npm start`).
+let autoUpdater = null;
+try {
+  autoUpdater = require('electron-updater').autoUpdater;
+} catch (e) {
+  // Running from source — updater is unavailable and not needed
+}
+
+// Hide from taskbar when no windows are open
+app.setAppUserModelId('com.benkirtland.aiclocker');
+
+let dashboardWindow = null;
+let trayHandle = null;
+
+function resolveRange(range) {
+  switch (range) {
+    case 'today': return stats.getTodayRange();
+    case 'week': return stats.getWeekRange();
+    case 'month': return stats.getMonthRange();
+    case 'all': return { startMs: 0, endMs: Date.now() };
+    default:
+      if (range && range.startMs !== undefined) return range;
+      return stats.getTodayRange();
+  }
+}
+
+function openDashboard() {
+  if (dashboardWindow) {
+    dashboardWindow.focus();
+    return;
+  }
+
+  dashboardWindow = new BrowserWindow({
+    width: 1100,
+    height: 750,
+    title: 'AIClocker',
+    icon: path.join(__dirname, 'icon.png'),
+    webPreferences: {
+      preload: path.join(__dirname, 'src', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  dashboardWindow.loadFile(path.join(__dirname, 'dashboard', 'index.html'));
+
+  dashboardWindow.on('closed', () => {
+    dashboardWindow = null;
+  });
+}
+
+function registerIpcHandlers() {
+  ipcMain.handle('get-stats', (event, range) => {
+    const r = resolveRange(range);
+    return stats.getRangeStats(r.startMs, r.endMs);
+  });
+
+  ipcMain.handle('get-model-breakdown', (event, range) => {
+    const r = resolveRange(range);
+    return stats.getModelBreakdown(r.startMs, r.endMs);
+  });
+
+  ipcMain.handle('get-daily-breakdown', (event, days) => {
+    return stats.getDailyBreakdown(days || 30);
+  });
+
+  ipcMain.handle('get-token-type-breakdown', (event, range) => {
+    const r = resolveRange(range);
+    return stats.getTokenTypeBreakdown(r.startMs, r.endMs);
+  });
+
+  ipcMain.handle('get-session-list', (event, limit, offset) => {
+    return stats.getSessionList(limit || 50, offset || 0);
+  });
+
+  ipcMain.handle('get-top-tools', (event, range, limit) => {
+    const r = resolveRange(range);
+    return stats.getTopTools(r.startMs, r.endMs, limit || 10);
+  });
+
+  ipcMain.handle('get-active-time', (event, range) => {
+    const r = resolveRange(range);
+    return stats.getActiveTimeEstimate(r.startMs, r.endMs);
+  });
+
+  ipcMain.handle('get-overall-stats', () => {
+    return stats.getOverallStats();
+  });
+}
+
+function applyStartWithWindows(enabled) {
+  app.setLoginItemSettings({
+    openAtLogin: !!enabled,
+    // Hide the window on login — app runs in tray only
+    openAsHidden: true,
+    path: process.execPath,
+    args: ['--hidden'],
+  });
+}
+
+function toggleStartWithWindows() {
+  const current = settings.get('startWithWindows');
+  const next = !current;
+  settings.set('startWithWindows', next);
+  applyStartWithWindows(next);
+  if (trayHandle) trayHandle.refresh();
+  return next;
+}
+
+/**
+ * Resolve the data directory and migrate an older database if needed.
+ *
+ * Priority:
+ *   1. Packaged app  → %APPDATA%/AIClocker/data   (via app.getPath('userData'))
+ *   2. Dev / run from source → <projectRoot>/data (legacy behavior)
+ *
+ * If a database already exists at one of the legacy locations from the
+ * pre-AIClocker rebrand, copy it over on first launch.
+ */
+function resolveDataDirAndMigrate() {
+  const userDataDir = app.getPath('userData');
+  const targetDataDir = path.join(userDataDir, 'data');
+
+  // Only redirect away from the project-local data dir when running packaged.
+  // When running from source (npm start), the existing project-local data
+  // dir keeps working for convenience.
+  const isPackaged = app.isPackaged;
+
+  if (!isPackaged) {
+    // Dev mode — keep using <projectRoot>/data (default in db.js)
+    return;
+  }
+
+  // Ensure target exists
+  if (!fs.existsSync(targetDataDir)) {
+    fs.mkdirSync(targetDataDir, { recursive: true });
+  }
+
+  const targetDbPath = path.join(targetDataDir, 'usage.db');
+
+  // If no DB at the target, look for a DB at known legacy locations and copy it.
+  if (!fs.existsSync(targetDbPath)) {
+    const candidates = [
+      path.join('E:', 'Dev', 'aiclocker', 'data', 'usage.db'),
+      path.join('E:', 'Dev', 'claude-usage-tracker', 'data', 'usage.db'),
+    ];
+    for (const candidate of candidates) {
+      try {
+        if (fs.existsSync(candidate)) {
+          console.log(`Migrating database from ${candidate}`);
+          fs.copyFileSync(candidate, targetDbPath);
+          // Copy WAL/SHM too if present (SQLite may need them)
+          for (const ext of ['-wal', '-shm']) {
+            const src = candidate + ext;
+            if (fs.existsSync(src)) {
+              try { fs.copyFileSync(src, targetDbPath + ext); } catch (e) {}
+            }
+          }
+          break;
+        }
+      } catch (e) { /* try next candidate */ }
+    }
+  }
+
+  setDataDir(targetDataDir);
+  console.log(`Using data directory: ${targetDataDir}`);
+}
+
+function setupAutoUpdater() {
+  if (!autoUpdater || !app.isPackaged) return;
+
+  autoUpdater.logger = {
+    info: (...args) => console.log('[updater]', ...args),
+    warn: (...args) => console.warn('[updater]', ...args),
+    error: (...args) => console.error('[updater]', ...args),
+    debug: () => {},
+  };
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[updater] update available:', info.version);
+  });
+  autoUpdater.on('update-not-available', () => {
+    console.log('[updater] no updates available');
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[updater] update downloaded:', info.version, '— will install on next launch');
+  });
+  autoUpdater.on('error', (err) => {
+    // Self-signed certs and missing GitHub releases will land here — don't crash
+    console.warn('[updater] error:', err.message);
+  });
+
+  // Initial check + periodic re-check every 6 hours
+  autoUpdater.checkForUpdatesAndNotify().catch(e => {
+    console.warn('[updater] initial check failed:', e.message);
+  });
+  setInterval(() => {
+    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+  }, 6 * 60 * 60 * 1000);
+}
+
+async function initialize() {
+  resolveDataDirAndMigrate();
+
+  console.log('Initializing database...');
+  getDb();
+
+  console.log('Ingesting data...');
+  const result = await ingestAll((i, total, name) => {
+    process.stdout.write(`  [${i}/${total}] ${name}\r`);
+  });
+  console.log(`\nIngested ${result.totalNew} new records from ${result.totalFiles} files`);
+
+  console.log('Resolving sessions...');
+  resolveSessions();
+}
+
+app.on('ready', async () => {
+  // Don't quit when all windows are closed (tray app)
+  app.on('window-all-closed', (e) => e.preventDefault());
+
+  await initialize();
+  registerIpcHandlers();
+
+  // Apply start-with-Windows preference
+  applyStartWithWindows(settings.get('startWithWindows'));
+
+  trayHandle = createTray(
+    openDashboard,
+    toggleStartWithWindows,
+    () => {
+      watcher.stop();
+      destroyTray();
+      closeDb();
+      app.quit();
+    }
+  );
+
+  // Start file watcher — refresh tray on changes
+  watcher.start(() => {
+    if (trayHandle) trayHandle.refresh();
+  });
+
+  // Kick off auto-updater in the background (packaged builds only)
+  setupAutoUpdater();
+
+  console.log('AIClocker running in system tray.');
+});
+
+app.on('before-quit', () => {
+  watcher.stop();
+  destroyTray();
+  closeDb();
+});
