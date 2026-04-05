@@ -13,6 +13,8 @@
 
 A Windows system tray app that tracks your AI coding tool usage — tokens, API-equivalent cost, time, and model breakdown. Ships with built-in support for **Claude Code** and **Claude Co-Work**, and has a plugin architecture for adding more tools.
 
+> **Before you install:** AIClocker tracks **Claude Code** (the VS Code extension / CLI) and **Claude Co-Work**. It does **not** track chat usage on claude.ai or in the Claude Desktop app — that data lives server-side and Anthropic doesn't expose it. See [What it does NOT track](#what-it-does-not-track) for the full explanation.
+
 **Current version:** 1.2.0
 **Platform:** Windows 11 (Electron 35)
 **Author:** Ben Kirtland — *A MouseWheel Digital product*
@@ -34,9 +36,23 @@ Parses the JSONL conversation logs that Claude Code and Co-Work write locally, s
 - **Tool usage frequency**
 
 ### What it does NOT track
-- **Claude Chat** in the Desktop app or on claude.ai — Anthropic doesn't expose that data locally
-- **GitHub Copilot, Cursor, Windsurf, Aider, etc.** — investigated, none store trackable local usage data on this machine
-- **Passive app-open time** — idle time is excluded by design
+
+> ⚠️ **Heads-up for most users:** AIClocker only tracks **Claude Code** and **Claude Co-Work**. If you only use Claude through the web app or the desktop app for regular chat, **this tool will show you nothing** — and there's nothing anyone can do about it without Anthropic shipping a usage API.
+
+- **Claude Chat in a browser** (claude.ai) — The chat data lives inside your browser's sandboxed IndexedDB and isn't exposed to outside apps. Even if we could read it, the data itself doesn't contain token counts — Anthropic doesn't send per-message usage numbers to the browser. A browser extension could count *messages* but not tokens or cost.
+- **Claude Chat in the Desktop app** — The desktop app is an Electron wrapper around claude.ai. Same story: conversations live server-side, the local cache (`%APPDATA%/Claude/`) only stores UI state and cached account metadata, not usage metrics. Verified by poking at its IndexedDB.
+- **Claude Pro / Max plan usage totals** — There's no public API for subscribers to query their own usage. The only official usage API Anthropic offers is on `console.anthropic.com` for **developer API keys**, not for Pro/Max chat accounts.
+- **GitHub Copilot, Cursor, Windsurf, Aider, Continue.dev, Cody, ChatGPT Desktop** — Investigated. None store trackable local usage data with token counts on the machine I tested. If any of these ever expose local JSONL-style logs, the plugin architecture (see [PROVIDERS.md](PROVIDERS.md)) lets you add a new provider in a single file.
+- **Microsoft Copilot** — Stores data in encrypted Helium DB format. Not parseable.
+- **Passive app-open time** — AIClocker measures *active* engagement based on message timestamp gaps. If you open Claude Code and walk away, that idle time is deliberately excluded.
+
+### Why Claude Code works but chat doesn't
+
+Claude Code is an IDE extension that writes full conversation JSONL logs to your local disk (`~/.claude/projects/`) with token counts, model info, timestamps, and tool-call details on every assistant message. AIClocker reads those files directly.
+
+Claude chat (web or desktop) doesn't do this — conversations live on Anthropic's servers and are only streamed to the client as display text, without the underlying usage metrics. No amount of local file parsing can recover data that was never sent to your machine in the first place.
+
+**If Anthropic ever adds a subscriber usage API, adding support would be a small patch to AIClocker.** Until then, chat usage is untrackable by any third-party tool, and anyone claiming otherwise is either using an MITM proxy (fragile, against ToS) or guessing.
 
 ---
 
