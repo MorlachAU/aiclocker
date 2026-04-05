@@ -176,6 +176,23 @@ E:\Dev\aiclocker\
 
 ---
 
+## Public mirror & automated sync
+
+AIClocker lives as a subdirectory in a larger private monorepo during development, but it's also mirrored to a standalone public repo at **https://github.com/MorlachAU/aiclocker**.
+
+Every commit to the parent repo that touches `aiclocker/` is automatically synced to the public repo via a local `post-commit` git hook that runs `scripts/sync-public.js`. The sync uses `git subtree split` so the public repo contains only the aiclocker history, not the rest of the monorepo.
+
+Manual sync is also available:
+```bash
+cd aiclocker
+npm run sync           # push latest to public repo
+npm run sync:dry       # dry-run (no push)
+```
+
+The hook lives at `.git/hooks/post-commit` in the parent repo. Since hooks are not tracked, re-installing AIClocker on a fresh machine requires copying the hook back into place.
+
+---
+
 ## Known limitations
 
 1. **No Claude Chat tracking** — Anthropic doesn't expose chat token data to subscribers

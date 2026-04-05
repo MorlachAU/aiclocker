@@ -11,7 +11,9 @@
     "make-cert": "node scripts/make-cert.js",
     "build:dir": "electron-builder --dir",
     "build": "electron-builder",
-    "build:publish": "electron-builder --publish always"
+    "build:publish": "electron-builder --publish always",
+    "sync": "node scripts/sync-public.js",
+    "sync:dry": "node scripts/sync-public.js --dry"
   },
   "author": "Ben Kirtland",
   "license": "MIT",
